@@ -2,7 +2,6 @@ const { body, validationResult } = require("express-validator");
 
 // Input validation for user signup
 exports.validateSignup = [
-  // Validate the name field
   body("name")
     .trim()
     .notEmpty()
@@ -10,7 +9,6 @@ exports.validateSignup = [
     .isLength({ min: 3 })
     .withMessage("Name should be at least 3 characters long."),
 
-  // Validate the email field
   body("email")
     .trim()
     .notEmpty()
@@ -19,7 +17,6 @@ exports.validateSignup = [
     .withMessage("Please provide a valid email address.")
     .normalizeEmail(),
 
-  // Validate the password field
   body("password")
     .trim()
     .notEmpty()
@@ -42,7 +39,6 @@ exports.validateSignup = [
 ];
 
 exports.validateLogin = [
-  // Validate the email field
   body("email")
     .trim()
     .notEmpty()
@@ -51,7 +47,6 @@ exports.validateLogin = [
     .withMessage("Please provide a valid email address.")
     .normalizeEmail(),
 
-  // Validate the password field
   body("password")
     .trim()
     .notEmpty()

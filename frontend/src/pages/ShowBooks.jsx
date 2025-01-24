@@ -37,7 +37,7 @@ const ShowBooks = ({ item, onEdit, onRefresh }) => {
         {
           Authorization: `Bearer ${token}`,
         }
-      ); 
+      );
       if (response.data.success) {
         toast.success("Book deleted successfully.");
         onRefresh(); // Refresh the list of books after deletion

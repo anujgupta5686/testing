@@ -27,6 +27,9 @@ const bookSchema = z.object({
   description: z
     .string()
     .min(20, "Description must be at least 20 characters long"),
+  bookImage: z.string({
+    required_error: "This field is required",
+  }),
 });
 
 const AddBook = ({ book = null, onClose, onRefresh }) => {
@@ -44,6 +47,7 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
       title: "",
       author: "",
       description: "",
+      bookImage: "",
     },
   });
 
@@ -53,6 +57,7 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
       setValue("title", book.title);
       setValue("author", book.author);
       setValue("description", book.description);
+      setValue("bookImage", book.bookImage);
     }
   }, [book, setValue]);
 
@@ -62,13 +67,18 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
     try {
       setLoading(true);
 
+      const formDataWithFile = new FormData();
+      for (const key in formData) {
+        formDataWithFile.append(key, formData[key]);
+      }
+
       let response;
       if (book) {
         // Update Mode
         response = await apiConnector(
           "PUT",
           `${bookEndpoints.UPDATE_BOOK.replace(":id", book._id)}`,
-          formData,
+          formDataWithFile,
           {
             Authorization: `Bearer ${token}`,
           }
@@ -78,7 +88,7 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
         response = await apiConnector(
           "POST",
           bookEndpoints.CREATE_BOOK,
-          formData,
+          formDataWithFile,
           {
             Authorization: `Bearer ${token}`,
           }
@@ -133,6 +143,14 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
             <Input id="author" {...register("author")} />
             {errors.author && (
               <p className="text-red-500 text-sm">{errors.author.message}</p>
+            )}
+          </div>
+          {/* Book Image */}
+          <div>
+            <Label htmlFor="bookImage">Image Insert</Label>
+            <Input id="bookImage" {...register("bookImage")} type="file" />
+            {errors.bookImage && (
+              <p className="text-red-500 text-sm">{errors.bookImage.message}</p>
             )}
           </div>
 

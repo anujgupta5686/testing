@@ -5,9 +5,20 @@ const errorMiddleware = require("./middlewares/error");
 const connection = require("./config/database_connection");
 const userRoute = require("./routes/userRoute");
 const bookRoute = require("./routes/bookRoute");
+const cloudinaryConnect = require("./config/cloudinary");
+const fileUpload = require("express-fileupload");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 dotenv.config();
+
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "/tmp",
+  })
+);
+//cloudinary connection
+cloudinaryConnect();
 app.use(express.json());
 app.use(cookieParser());
 app.use(

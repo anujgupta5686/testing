@@ -1,17 +1,29 @@
 const Book = require("../models/book.js");
 const mongoose = require("mongoose");
 const ErrorHandler = require("../utils/errorHandler.js");
-
+const { uploadImageToCloudinary } = require("../utils/imageUploader.js");
+require("dotenv").config();
 // Add Book
 const addBook = async (req, res, next) => {
   try {
     const { title, author, description } = req.body;
+    const bookImage = req.files.bookImage;
+    console.log("Received bookImage:", bookImage);
 
-    if (!title || !author || !description) {
+    if (!title || !author || !description || !bookImage) {
       return next(new ErrorHandler("All fields are required", 400));
     }
-
-    const book = new Book({ title, author, description });
+    const bookImageDisplay = await uploadImageToCloudinary(
+      bookImage,
+      process.env.CLOUDINARY_FOLDER_NAME
+    );
+    console.log("Data::", bookImageDisplay);
+    const book = new Book({
+      title,
+      author,
+      description,
+      bookImage: bookImageDisplay.secure_url,
+    });
     const savedBook = await book.save();
 
     return res.status(201).json({
@@ -72,19 +84,25 @@ const updateBook = async (req, res, next) => {
   try {
     const bookId = req.params.id;
     const { title, author, description } = req.body;
+    const bookImage = req.files.bookImage;
 
     if (!mongoose.isValidObjectId(bookId)) {
       return next(new ErrorHandler("Invalid Book ID", 400));
     }
-
+    if (!title || !author || !description || !bookImage) {
+      return next(new ErrorHandler("All fields are required", 400));
+    }
     const book = await Book.findById(bookId);
     if (!book) {
       return next(new ErrorHandler("Book not found", 404));
     }
-
+    const bookImageDisplay = await uploadImageToCloudinary(
+      bookImage,
+      process.env.CLOUDINARY_FOLDER_NAME
+    );
     const updatedBook = await Book.findByIdAndUpdate(
       bookId,
-      { title, author, description },
+      { title, author, description, bookImage: bookImageDisplay.secure_url },
       { new: true }
     );
 

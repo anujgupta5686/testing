@@ -6,6 +6,7 @@ const ErrorHandler = require("../utils/errorHandler");
 
 dotenv.config();
 
+// User Schema Definition
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -21,13 +22,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
-      select: false,
-    },
-    token: {
-      type: String,
-    },
-    resetPasswordExpires: {
-      type: Date,
+      select: false, // Prevent password from being returned in queries
     },
   },
   {

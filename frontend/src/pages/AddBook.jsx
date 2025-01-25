@@ -6,7 +6,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,16 +19,13 @@ import { Loader2 } from "lucide-react";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 
-// ✅ Zod Schema for Validation
+// ✅ Zod Schema for Text Validation (without file validation)
 const bookSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters long"),
   author: z.string().min(2, "Author must be at least 2 characters long"),
   description: z
     .string()
     .min(20, "Description must be at least 20 characters long"),
-  bookImage: z.string({
-    required_error: "This field is required",
-  }),
 });
 
 const AddBook = ({ book = null, onClose, onRefresh }) => {
@@ -47,7 +43,6 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
       title: "",
       author: "",
       description: "",
-      bookImage: "",
     },
   });
 
@@ -57,28 +52,28 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
       setValue("title", book.title);
       setValue("author", book.author);
       setValue("description", book.description);
-      setValue("bookImage", book.bookImage);
     }
   }, [book, setValue]);
 
   // ✅ Handle Submit for Add or Update
   const onHandleSubmit = async (formData) => {
-    const token = Cookies.get("token");
+    const token = Cookies.get("token"); // Ensure token exists
+    if (!token) {
+      toast.error("Authentication failed. Please log in again.");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const formDataWithFile = new FormData();
-      for (const key in formData) {
-        formDataWithFile.append(key, formData[key]);
-      }
-
+      // API Call Logic
       let response;
       if (book) {
         // Update Mode
         response = await apiConnector(
           "PUT",
           `${bookEndpoints.UPDATE_BOOK.replace(":id", book._id)}`,
-          formDataWithFile,
+          formData, // Send the updated data
           {
             Authorization: `Bearer ${token}`,
           }
@@ -88,27 +83,28 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
         response = await apiConnector(
           "POST",
           bookEndpoints.CREATE_BOOK,
-          formDataWithFile,
+          formData, // Send the new book data
           {
             Authorization: `Bearer ${token}`,
           }
         );
       }
 
-      if (response.data.success) {
-        toast.success(response.data.message);
+      // Handle API Response
+      if (response?.data?.success) {
+        toast.success(response.data.message || "Book saved successfully.");
         onRefresh(); // Refresh book list
-        onClose(); // Close the dialog
+        onClose(); // Close dialog
       } else {
-        toast.error(response.data.message);
+        toast.error(response?.data?.message || "Failed to save book data.");
       }
     } catch (error) {
       console.error("Operation failed:", error);
-      toast.error("Failed to save book data.");
+      toast.error("An error occurred while saving book data.");
     } finally {
       setLoading(false);
+      reset(); // Reset form fields
     }
-    reset();
   };
 
   return (
@@ -145,13 +141,11 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
               <p className="text-red-500 text-sm">{errors.author.message}</p>
             )}
           </div>
+
           {/* Book Image */}
           <div>
-            <Label htmlFor="bookImage">Image Insert</Label>
-            <Input id="bookImage" {...register("bookImage")} type="file" />
-            {errors.bookImage && (
-              <p className="text-red-500 text-sm">{errors.bookImage.message}</p>
-            )}
+            <Label htmlFor="bookImage">Book Image</Label>
+            <Input id="bookImage" type="file" accept="image/*" />
           </div>
 
           {/* Description */}

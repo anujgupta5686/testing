@@ -10,7 +10,7 @@ const addBook = async (req, res, next) => {
     const bookImage = req.files.bookImage;
     console.log("Received bookImage:", bookImage);
 
-    if (!title || !author || !description || !bookImage) {
+    if (!title || !author || !description) {
       return next(new ErrorHandler("All fields are required", 400));
     }
     const bookImageDisplay = await uploadImageToCloudinary(
@@ -89,7 +89,7 @@ const updateBook = async (req, res, next) => {
     if (!mongoose.isValidObjectId(bookId)) {
       return next(new ErrorHandler("Invalid Book ID", 400));
     }
-    if (!title || !author || !description || !bookImage) {
+    if (!title || !author || !description) {
       return next(new ErrorHandler("All fields are required", 400));
     }
     const book = await Book.findById(bookId);
@@ -101,8 +101,13 @@ const updateBook = async (req, res, next) => {
       process.env.CLOUDINARY_FOLDER_NAME
     );
     const updatedBook = await Book.findByIdAndUpdate(
-      bookId,
-      { title, author, description, bookImage: bookImageDisplay.secure_url },
+      book._id,
+      {
+        title,
+        author,
+        description,
+        bookImage: bookImageDisplay.secure_url,
+      },
       { new: true }
     );
 
@@ -134,7 +139,7 @@ const deleteBook = async (req, res, next) => {
       return next(new ErrorHandler("Book not found", 404));
     }
 
-    await Book.findByIdAndDelete(bookId);
+    await Book.findByIdAndDelete(book._id);
 
     return res.status(200).json({
       success: true,

@@ -24,7 +24,7 @@ app.use(cookieParser());
 app.use(
   cors({
     // origin: "http://localhost:5173",
-    origin: "https://todo-nine-olive-52.vercel.app/",
+    origin: "https://todo-nine-olive-52.vercel.app",
     credentials: true,
   })
 );

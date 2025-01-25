@@ -19,7 +19,6 @@ import { Loader2 } from "lucide-react";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 
-// ✅ Zod Schema for Text Validation (without file validation)
 const bookSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters long"),
   author: z.string().min(2, "Author must be at least 2 characters long"),
@@ -30,6 +29,7 @@ const bookSchema = z.object({
 
 const AddBook = ({ book = null, onClose, onRefresh }) => {
   const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState(null);
 
   const {
     register,
@@ -46,18 +46,24 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
     },
   });
 
-  // ✅ Populate the form if `book` exists (Edit Mode)
   useEffect(() => {
     if (book) {
       setValue("title", book.title);
       setValue("author", book.author);
       setValue("description", book.description);
+      if (book.bookImage) {
+        setImage(book.bookImage);
+      }
     }
   }, [book, setValue]);
 
-  // ✅ Handle Submit for Add or Update
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImage(file);
+  };
+
   const onHandleSubmit = async (formData) => {
-    const token = Cookies.get("token"); // Ensure token exists
+    const token = Cookies.get("token");
     if (!token) {
       toast.error("Authentication failed. Please log in again.");
       return;
@@ -65,36 +71,41 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
 
     try {
       setLoading(true);
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("author", formData.author);
+      formDataToSend.append("description", formData.description);
+      if (image && typeof image !== "string") {
+        formDataToSend.append("bookImage", image);
+      }
 
-      // API Call Logic
       let response;
       if (book) {
-        // Update Mode
         response = await apiConnector(
           "PUT",
           `${bookEndpoints.UPDATE_BOOK.replace(":id", book._id)}`,
-          formData, // Send the updated data
+          formDataToSend,
           {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           }
         );
       } else {
-        // Add Mode
         response = await apiConnector(
           "POST",
           bookEndpoints.CREATE_BOOK,
-          formData, // Send the new book data
+          formDataToSend,
           {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           }
         );
       }
 
-      // Handle API Response
       if (response?.data?.success) {
         toast.success(response.data.message || "Book saved successfully.");
-        onRefresh(); // Refresh book list
-        onClose(); // Close dialog
+        onRefresh();
+        onClose();
       } else {
         toast.error(response?.data?.message || "Failed to save book data.");
       }
@@ -103,81 +114,69 @@ const AddBook = ({ book = null, onClose, onRefresh }) => {
       toast.error("An error occurred while saving book data.");
     } finally {
       setLoading(false);
-      reset(); // Reset form fields
+      reset();
     }
   };
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-[90%] md:max-w-[600px] rounded-xl shadow-xl p-6">
-        {/* Dialog Header */}
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center text-gray-800">
-            {book ? "Edit Book" : "Add a New Book"}
-          </DialogTitle>
-          <DialogDescription className="text-center text-gray-600 mb-4">
+          <DialogTitle>{book ? "Edit Book" : "Add Book"}</DialogTitle>
+          <DialogDescription>
             {book
-              ? "Update the details of the selected book."
-              : "Fill in the details below to add a new book to your collection."}
+              ? "Update the details of the book."
+              : "Add a new book to the list."}
           </DialogDescription>
         </DialogHeader>
-
-        {/* Form */}
         <form onSubmit={handleSubmit(onHandleSubmit)} className="space-y-4">
-          {/* Title */}
-          <div>
-            <Label htmlFor="title">Title</Label>
-            <Input id="title" {...register("title")} />
-            {errors.title && (
-              <p className="text-red-500 text-sm">{errors.title.message}</p>
-            )}
-          </div>
+          <Label>Title</Label>
+          <Input
+            type="text"
+            {...register("title")}
+            placeholder="Enter book title"
+            className="w-full"
+          />
+          {errors.title && (
+            <p className="text-red-500">{errors.title.message}</p>
+          )}
 
-          {/* Author */}
-          <div>
-            <Label htmlFor="author">Author</Label>
-            <Input id="author" {...register("author")} />
-            {errors.author && (
-              <p className="text-red-500 text-sm">{errors.author.message}</p>
-            )}
-          </div>
+          <Label>Author</Label>
+          <Input
+            type="text"
+            {...register("author")}
+            placeholder="Enter book author"
+            className="w-full"
+          />
+          {errors.author && (
+            <p className="text-red-500">{errors.author.message}</p>
+          )}
 
-          {/* Book Image */}
-          <div>
-            <Label htmlFor="bookImage">Book Image</Label>
-            <Input id="bookImage" type="file" accept="image/*" />
-          </div>
+          <Label>Description</Label>
+          <Textarea
+            {...register("description")}
+            placeholder="Enter book description"
+            className="w-full"
+          />
+          {errors.description && (
+            <p className="text-red-500">{errors.description.message}</p>
+          )}
 
-          {/* Description */}
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea id="description" {...register("description")} />
-            {errors.description && (
-              <p className="text-red-500 text-sm">
-                {errors.description.message}
-              </p>
-            )}
-          </div>
+          <Label>Book Image</Label>
+          {image && typeof image === "string" ? (
+            <div className="flex items-center space-x-4">
+              <img src={image} alt="Book" className="w-24 h-24 rounded-md" />
+              <Button onClick={() => setImage(null)} variant="outline">
+                Change
+              </Button>
+            </div>
+          ) : (
+            <Input type="file" accept="image/*" onChange={handleImageChange} />
+          )}
 
-          {/* Submit Button */}
-          <div className="flex justify-end mt-6">
-            <Button
-              type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="animate-spin" />
-                  Please wait
-                </>
-              ) : book ? (
-                "Update Book"
-              ) : (
-                "Add Book"
-              )}
-            </Button>
-          </div>
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? <Loader2 className="animate-spin" /> : "Save"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

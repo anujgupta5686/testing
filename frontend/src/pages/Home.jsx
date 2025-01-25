@@ -8,7 +8,7 @@ const Home = () => {
   const [data, setData] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
-
+  console.log("DATA::", data);
   useEffect(() => {
     refreshBooks();
   }, []);

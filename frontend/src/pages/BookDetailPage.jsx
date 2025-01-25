@@ -47,7 +47,11 @@ const BookDetailPage = () => {
             {/* Book Image */}
             <div className="relative overflow-hidden group">
               <img
-                src="https://repository-images.githubusercontent.com/181327815/cba87a00-62f0-11e9-9842-5336945a96f6" // Dummy Image
+                src={
+                  details.bookImage
+                    ? details.bookImage
+                    : "https://media.flaticon.com/dist/min/img/collections/collection-tour.svg"
+                } // Dummy Image
                 alt="Book Cover"
                 className="w-full h-96 object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
               />

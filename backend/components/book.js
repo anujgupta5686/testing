@@ -3,27 +3,36 @@ const mongoose = require("mongoose");
 const ErrorHandler = require("../utils/errorHandler.js");
 const { uploadImageToCloudinary } = require("../utils/imageUploader.js");
 require("dotenv").config();
+
 // Add Book
 const addBook = async (req, res, next) => {
   try {
     const { title, author, description } = req.body;
-    const bookImage = req.files.bookImage;
-    console.log("Received bookImage:", bookImage);
+    let bookImageDisplay = null; // Default to null if no image is provided
 
     if (!title || !author || !description) {
-      return next(new ErrorHandler("All fields are required", 400));
+      return next(
+        new ErrorHandler("Title, author, and description are required", 400)
+      );
     }
-    const bookImageDisplay = await uploadImageToCloudinary(
-      bookImage,
-      process.env.CLOUDINARY_FOLDER_NAME
-    );
-    console.log("Data::", bookImageDisplay);
+
+    // If bookImage is provided, upload it to Cloudinary
+    if (req.files && req.files.bookImage) {
+      const bookImage = req.files.bookImage;
+      bookImageDisplay = await uploadImageToCloudinary(
+        bookImage,
+        process.env.CLOUDINARY_FOLDER_NAME
+      );
+    }
+
+    // Create and save the book
     const book = new Book({
       title,
       author,
       description,
-      bookImage: bookImageDisplay.secure_url,
+      bookImage: bookImageDisplay ? bookImageDisplay.secure_url : undefined,
     });
+
     const savedBook = await book.save();
 
     return res.status(201).json({
@@ -84,29 +93,42 @@ const updateBook = async (req, res, next) => {
   try {
     const bookId = req.params.id;
     const { title, author, description } = req.body;
-    const bookImage = req.files.bookImage;
+    let bookImageDisplay = null;
 
     if (!mongoose.isValidObjectId(bookId)) {
       return next(new ErrorHandler("Invalid Book ID", 400));
     }
+
     if (!title || !author || !description) {
-      return next(new ErrorHandler("All fields are required", 400));
+      return next(
+        new ErrorHandler("Title, author, and description are required", 400)
+      );
     }
+
     const book = await Book.findById(bookId);
     if (!book) {
       return next(new ErrorHandler("Book not found", 404));
     }
-    const bookImageDisplay = await uploadImageToCloudinary(
-      bookImage,
-      process.env.CLOUDINARY_FOLDER_NAME
-    );
+
+    // If a new image is provided, upload it to Cloudinary
+    if (req.files && req.files.bookImage) {
+      const bookImage = req.files.bookImage;
+      bookImageDisplay = await uploadImageToCloudinary(
+        bookImage,
+        process.env.CLOUDINARY_FOLDER_NAME
+      );
+    }
+
+    // Update the book details
     const updatedBook = await Book.findByIdAndUpdate(
-      book._id,
+      bookId,
       {
         title,
         author,
         description,
-        bookImage: bookImageDisplay.secure_url,
+        bookImage: bookImageDisplay
+          ? bookImageDisplay.secure_url
+          : book.bookImage,
       },
       { new: true }
     );
@@ -149,4 +171,5 @@ const deleteBook = async (req, res, next) => {
     next(new ErrorHandler(e.message || "Error in deleting book", 500));
   }
 };
+
 module.exports = { addBook, getBookById, getAllBooks, updateBook, deleteBook };

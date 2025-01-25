@@ -11,6 +11,8 @@ const BookDetailPage = () => {
   const navigate = useNavigate();
   const newParams = params.id;
 
+  console.log("details::", details);
+
   useEffect(() => {
     refreshBooks();
   }, [newParams]);

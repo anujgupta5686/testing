@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CiEdit } from "react-icons/ci";
 import { MdOutlineDeleteOutline } from "react-icons/md";
+import { BiSolidDetail } from "react-icons/bi";
 import {
   Dialog,
   DialogContent,
@@ -103,7 +104,7 @@ const ShowBooks = ({ item, onEdit, onRefresh }) => {
             className="px-4 py-2 bg-teal-600 text-white rounded-lg shadow-md font-semibold hover:bg-teal-700 hover:shadow-lg transition-all duration-300 transform hover:scale-105"
             title="Show More"
           >
-            Show More
+            <BiSolidDetail />
           </button>
         </div>
       </td>

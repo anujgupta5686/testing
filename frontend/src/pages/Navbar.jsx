@@ -45,7 +45,7 @@ const Navbar = () => {
   };
 
   return (
-    <div className="flex justify-between px-16 items-center py-2 bg-slate-300">
+    <div className="flex justify-between px-2 md:px-16 items-center py-2 bg-slate-300 sticky top-0 z-50">
       <Link to={"/"}>
         <img src={logo} alt="Logo" loading="lazy" width={150} />
       </Link>

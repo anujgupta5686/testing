@@ -23,12 +23,12 @@ const Home = () => {
   };
 
   const handleAddClick = () => {
-    setSelectedBook(null); // Add Mode
+    setSelectedBook(null);
     setIsDialogOpen(true);
   };
 
   const handleEditClick = (book) => {
-    setSelectedBook(book); // Edit Mode
+    setSelectedBook(book);
     setIsDialogOpen(true);
   };
 

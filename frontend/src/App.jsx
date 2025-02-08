@@ -7,6 +7,7 @@ import PublicRoute from "./custom/PublicRoute";
 import PrivateRoute from "./custom/PrivateRoute";
 import PageNotFound from "./pages/PageNotFound";
 import BookDetailPage from "./pages/BookDetailPage";
+import Footer from "./pages/Footer";
 
 const App = () => {
   return (
@@ -28,6 +29,7 @@ const App = () => {
           element={
             <PrivateRoute>
               <Home />
+              <Footer />
             </PrivateRoute>
           }
         />
